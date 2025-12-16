@@ -4,40 +4,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RED</title>
-</head>
-<body>
-<p><!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RED</title>
     <style>
         body {
-            margin: 0; padding: 0; background-color: #111; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; user-select: none;
-        }
-        #game-container {
-            position: relative; width: 800px; height: 450px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); border: 2px solid #333; background: #051895;
-        }
-        canvas { display: block; }
-        .ui-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0, 0, 0, 0.85); color: white; z-index: 20;
-        }
-        .hidden { display: none !important; }
-        h1 { font-size: 48px; margin-bottom: 20px; color: #0ff; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 10px #0ff; }
-        h2 { font-size: 36px; margin-bottom: 20px; color: #ff3333; }
-        button {
-            padding: 15px 40px; margin: 10px; font-size: 20px; cursor: pointer; background: transparent; color: #fff; border: 2px solid #fff; transition: all 0.3s; text-transform: uppercase; font-weight: bold;
-        }
-        button:hover { background: #fff; color: #000; box-shadow: 0 0 15px rgba(255, 255, 255, 0.8); }
-        #hud-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;
-        }
-        #score-board {
-            position: absolute; top: 15px; left: 20px; color: #fff; font-size: 24px; font-weight: bold; text-shadow: 1px 1px 2px #000;
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            user-select: none; /* Chống bôi đen text khi chơi */
         }
 
-       /* Thanh máu góc dưới trái */
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 450px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            border: 2px solid #333;
+            background-image: url('BGHOME.jpg'); /* Màu nền xanh đậm nếu chưa có ảnh */
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* --- UI Overlay Styles --- */
+        .ui-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            z-index: 20; /* Cao nhất để che game */
+        }
+
+        .hidden { display: none !important; }
+
+        h1 { font-size: 48px; margin-bottom: 20px; color: #0ff; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 10px #0ff; }
+        h2 { font-size: 36px; margin-bottom: 20px; color: #ff3333; }
+        
+        button {
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            background: transparent;
+            color: #fff;
+            border: 2px solid #fff;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+
+        /* --- HUD (Heads Up Display) - Giao diện trong game --- */
+        #hud-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Để chuột bấm xuyên qua vào canvas */
+            z-index: 10;
+        }
+
+        /* Điểm số góc trên trái */
+        #score-board {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            color: #fff;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        /* Thanh máu góc dưới trái */
         .health-container {
             position: absolute;
             bottom: 20px;
@@ -70,31 +126,6 @@
             background: linear-gradient(90deg, #00ff00, #00cc00);
             transition: width 0.2s ease-out, background-color 0.3s;
         }
-
-        /* 3. Lớp mặt nạ chứa (Mask Container) - Nằm bên dưới khung */
-        #hp-bar-mask {
-            position: absolute;
-            /* Căn chỉnh vị trí này để thanh máu nằm lọt vào trong lòng khung */
-            /* Ví dụ: nếu khung dày 5px thì top: 5px; left: 5px; */
-            top: 5px; 
-            left: 5px;
-            /* Chiều rộng và cao tối đa của phần ruột bên trong khung */
-            width: 240px; 
-            height: 30px;
-            
-            overflow: hidden; /* QUAN TRỌNG: Cắt phần hình ảnh thừa khi thu nhỏ */
-            z-index: 1;
-            transition: width 0.2s ease-out; /* Hiệu ứng mượt khi tụt máu */
-        }
-
-        /* 4. Hình ảnh thanh máu (Fill Image) - Nằm trong mặt nạ */
-        #hp-fill-img {
-            /* Kích thước phải luôn bằng kích thước tối đa của mặt nạ chứa nó */
-            width: 240px;
-            height: 30px;
-            display: block;
-            transition: filter 0.3s; /* Hiệu ứng chuyển màu mượt */
-        }
     </style>
 </head>
 <body>
@@ -105,17 +136,16 @@
     <div id="hud-layer" class="hidden">
         <div id="score-board">SCORE: <span id="scoreVal">0</span></div>
         
-        <div class="hp-image-container">
-            <div class="hp-frame-layer"></div>
-            
-            <div id="hp-bar-mask">
-                <img id="hp-fill-img" src="https://placehold.co/240x30/00ff00/png?text= " alt="HP Fill">
+        <div class="health-container">
+            <span class="hp-label">HP</span>
+            <div class="health-bar-frame">
+                <div id="health-bar-fill"></div>
             </div>
         </div>
-        </div>
+    </div>
 
     <div id="menuScreen" class="ui-screen">
-        <h1>RED!</h1>
+        <h1></h1>
         <button onclick="startGame()">Start Game</button>
         <button onclick="exitGame()">Exit</button>
     </div>
@@ -130,159 +160,310 @@
 
 <script>
     // --- CẤU HÌNH & TÀI NGUYÊN ---
-    const playerImg = new Image(); playerImg.src = 'redplane.png';
-    const enemyImg = new Image(); enemyImg.src = 'cloudblack.png';
-    const bgImg = new Image(); bgImg.src = 'skybg.jpg';
-    const ASSETS = { player: playerImg, enemy: enemyImg, background: bgImg };
 
+    const playerImg = new Image();
+    playerImg.src = 'redplane.png'; // Đảm bảo file ảnh tên là maybay.png
+
+    const enemyImg = new Image();
+    enemyImg.src = 'cloudblack.png';   // Đảm bảo file ảnh tên là enemy.png
+
+    const bgImg = new Image();
+    // Lưu ý: Mình đã sửa nen.jpg.jpg thành nen.jpg cho đúng chuẩn
+    // Nếu file của bạn thực sự tên là nen.jpg.jpg thì hãy sửa lại dòng dưới
+    bgImg.src = 'skybg.jpg'; 
+
+    const ASSETS = {
+        player: playerImg, 
+        enemy: enemyImg, 
+        background: bgImg,
+    };
+
+    // Hàm vẽ sprite hoặc khối màu thay thế
     function drawSprite(ctx, img, x, y, w, h, color) {
         if (img && img.complete && img.naturalHeight !== 0) {
             ctx.drawImage(img, x, y, w, h);
         } else {
-            ctx.fillStyle = color; ctx.fillRect(x, y, w, h); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, w, h);
         }
     }
 
     // --- KHỞI TẠO ---
-    const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
-    let isPlaying = false; let score = 0; let frames = 0; let animationId; let bgX = 0;
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let isPlaying = false;
+    let score = 0;
+    let frames = 0;
+    let animationId;
+    let bgX = 0;
+
     const keys = { w: false, a: false, s: false, d: false };
-    let player; let bullets = []; let enemies = []; let particles = [];
+    
+    let player;
+    let bullets = [];
+    let enemies = [];
+    let particles = [];
 
     // --- CLASS ĐỊNH NGHĨA ---
     class Player {
         constructor() {
-            this.w = 100; this.h = 100; this.x = 50; this.y = canvas.height / 2 - this.h / 2;
-            this.speed = 5; this.color = '#00ff00';
-            this.maxHp = 100; this.hp = this.maxHp;
+            this.w = 100;
+            this.h = 100;
+            this.x = 50;
+            this.y = canvas.height / 2 - this.h / 2;
+            this.speed = 5;
+            this.color = '#00ff00';
+            this.maxHp = 100;
+            this.hp = this.maxHp;
         }
+
         update() {
             if (keys.w && this.y > 0) this.y -= this.speed;
             if (keys.s && this.y < canvas.height - this.h) this.y += this.speed;
             if (keys.a && this.x > 0) this.x -= this.speed;
             if (keys.d && this.x < canvas.width - this.w) this.x += this.speed;
         }
-        draw() { drawSprite(ctx, ASSETS.player, this.x, this.y, this.w, this.h, this.color); }
+
+        draw() {
+            // Chỉ vẽ máy bay, KHÔNG vẽ thanh máu ở đây nữa
+            drawSprite(ctx, ASSETS.player, this.x, this.y, this.w, this.h, this.color);
+        }
     }
 
     class Bullet {
         constructor(x, y) {
-            this.x = x; this.y = y; this.w = 10; this.h = 4; this.speed = 10; this.color = '#ffff00'; this.markedForDeletion = false;
+            this.x = x;
+            this.y = y;
+            this.w = 10;
+            this.h = 4;
+            this.speed = 10;
+            this.color = '#ffff00';
+            this.markedForDeletion = false;
         }
-        update() { this.x += this.speed; if (this.x > canvas.width) this.markedForDeletion = true; }
+        update() {
+            this.x += this.speed;
+            if (this.x > canvas.width) this.markedForDeletion = true;
+        }
         draw() {
-            ctx.fillStyle = this.color; ctx.fillRect(this.x, this.y, this.w, this.h);
-            ctx.shadowBlur = 10; ctx.shadowColor = this.color; ctx.fill(); ctx.shadowBlur = 0;
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.w, this.h);
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = this.color;
+            ctx.fill();
+            ctx.shadowBlur = 0;
         }
     }
 
     class Enemy {
         constructor() {
-            this.w = 127; this.h = 95; this.x = canvas.width; this.y = Math.random() * (canvas.height - this.h);
-            this.speed = Math.random() * 3 + 2; this.color = '#ff0000'; this.markedForDeletion = false;
+            this.w = 236;
+            this.h = 123;
+            this.x = canvas.width;
+            this.y = Math.random() * (canvas.height - this.h);
+            this.speed = Math.random() * 3 + 2;
+            this.color = '#ff0000';
+            this.markedForDeletion = false;
         }
-        update() { this.x -= this.speed; if (this.x + this.w < 0) this.markedForDeletion = true; }
-        draw() { drawSprite(ctx, ASSETS.enemy, this.x, this.y, this.w, this.h, this.color); }
+        update() {
+            this.x -= this.speed;
+            if (this.x + this.w < 0) this.markedForDeletion = true;
+        }
+        draw() {
+            drawSprite(ctx, ASSETS.enemy, this.x, this.y, this.w, this.h, this.color);
+        }
     }
 
     class Particle {
         constructor(x, y, color) {
-            this.x = x; this.y = y; this.size = Math.random() * 5 + 2;
-            this.speedX = Math.random() * 6 - 3; this.speedY = Math.random() * 6 - 3;
-            this.color = color; this.life = 1; this.decay = Math.random() * 0.05 + 0.02;
+            this.x = x;
+            this.y = y;
+            this.size = Math.random() * 5 + 2;
+            this.speedX = Math.random() * 6 - 3;
+            this.speedY = Math.random() * 6 - 3;
+            this.color = color;
+            this.life = 1;
+            this.decay = Math.random() * 0.05 + 0.02;
         }
-        update() { this.x += this.speedX; this.y += this.speedY; this.life -= this.decay; }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.life -= this.decay;
+        }
         draw() {
-            ctx.save(); ctx.globalAlpha = this.life; ctx.fillStyle = this.color;
-            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+            ctx.save();
+            ctx.globalAlpha = this.life;
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
         }
     }
 
     // --- HỆ THỐNG ĐIỀU KHIỂN ---
-    window.addEventListener('keydown', (e) => { if(e.key.toLowerCase() === 'w') keys.w = true; if(e.key.toLowerCase() === 'a') keys.a = true; if(e.key.toLowerCase() === 's') keys.s = true; if(e.key.toLowerCase() === 'd') keys.d = true; });
-    window.addEventListener('keyup', (e) => { if(e.key.toLowerCase() === 'w') keys.w = false; if(e.key.toLowerCase() === 'a') keys.a = false; if(e.key.toLowerCase() === 's') keys.s = false; if(e.key.toLowerCase() === 'd') keys.d = false; });
-    canvas.addEventListener('mousedown', (e) => { if (isPlaying) { bullets.push(new Bullet(player.x + player.w, player.y + player.h / 2)); } });
+    window.addEventListener('keydown', (e) => {
+        if(e.key.toLowerCase() === 'w') keys.w = true;
+        if(e.key.toLowerCase() === 'a') keys.a = true;
+        if(e.key.toLowerCase() === 's') keys.s = true;
+        if(e.key.toLowerCase() === 'd') keys.d = true;
+    });
 
-    // --- LOGIC GAME & CẬP NHẬT UI MỚI ---
+    window.addEventListener('keyup', (e) => {
+        if(e.key.toLowerCase() === 'w') keys.w = false;
+        if(e.key.toLowerCase() === 'a') keys.a = false;
+        if(e.key.toLowerCase() === 's') keys.s = false;
+        if(e.key.toLowerCase() === 'd') keys.d = false;
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+        if (isPlaying) {
+            bullets.push(new Bullet(player.x + player.w, player.y + player.h / 2));
+        }
+    });
+
+    // --- LOGIC GAME & CẬP NHẬT UI ---
 
     function updateUI() {
         // Cập nhật điểm số
         document.getElementById('scoreVal').innerText = score;
 
-        // Tính phần trăm máu
+        // Cập nhật thanh máu UI HTML
         const hpPercent = Math.max(0, (player.hp / player.maxHp) * 100);
+        const hpBar = document.getElementById('health-bar-fill');
         
-        // 1. Cập nhật chiều rộng của LỚP MẶT NẠ (Mask)
-        const hpMask = document.getElementById('hp-bar-mask');
-        hpMask.style.width = hpPercent + '%';
+        hpBar.style.width = hpPercent + '%';
 
-        // 2. Đổi màu hình ảnh bằng CSS Filter (Không bắt buộc, nhưng giúp dùng 1 ảnh cho nhiều màu)
-        const hpFillImg = document.getElementById('hp-fill-img');
-        
+        // Đổi màu thanh máu khi máu thấp (Vàng -> Đỏ)
         if (hpPercent < 30) {
-            // Máu đỏ: Xoay màu ảnh gốc sang đỏ và tăng bão hòa
-            hpFillImg.style.filter = 'hue-rotate(-120deg) saturate(3) brightness(0.8)'; 
+            hpBar.style.background = '#ff0000'; // Đỏ
         } else if (hpPercent < 60) {
-            // Máu vàng/cam: Xoay màu ảnh gốc sang cam
-            hpFillImg.style.filter = 'hue-rotate(-50deg) saturate(2)';
+            hpBar.style.background = '#ffaa00'; // Cam/Vàng
         } else {
-            // Máu xanh: Không áp dụng filter (dùng màu gốc của ảnh)
-            hpFillImg.style.filter = 'none';
+            hpBar.style.background = 'linear-gradient(90deg, #00ff00, #00cc00)'; // Xanh
         }
     }
 
     function createExplosion(x, y, color) {
-        for(let i = 0; i < 10; i++) particles.push(new Particle(x, y, color));
+        for(let i = 0; i < 10; i++) {
+            particles.push(new Particle(x, y, color));
+        }
     }
 
     function checkCollisions() {
+        // Bullet vs Enemy
         bullets.forEach(bullet => {
             enemies.forEach(enemy => {
-                if (!bullet.markedForDeletion && !enemy.markedForDeletion && bullet.x < enemy.x + enemy.w && bullet.x + bullet.w > enemy.x && bullet.y < enemy.y + enemy.h && bullet.y + bullet.h > enemy.y) {
-                    bullet.markedForDeletion = true; enemy.markedForDeletion = true; score += 10; createExplosion(enemy.x + enemy.w/2, enemy.y + enemy.h/2, '#ffaa00');
+                if (!bullet.markedForDeletion && !enemy.markedForDeletion &&
+                    bullet.x < enemy.x + enemy.w &&
+                    bullet.x + bullet.w > enemy.x &&
+                    bullet.y < enemy.y + enemy.h &&
+                    bullet.y + bullet.h > enemy.y) {
+                    
+                    bullet.markedForDeletion = true;
+                    enemy.markedForDeletion = true;
+                    score += 10;
+                    createExplosion(enemy.x + enemy.w/2, enemy.y + enemy.h/2, '#ffaa00');
                 }
             });
         });
+
+        // Player vs Enemy
         enemies.forEach(enemy => {
-            if (!enemy.markedForDeletion && player.x < enemy.x + enemy.w && player.x + player.w > enemy.x && player.y < enemy.y + enemy.h && player.y + player.h > enemy.y) {
-                enemy.markedForDeletion = true; player.hp -= 20; createExplosion(player.x + player.w/2, player.y + player.h/2, '#ff0000');
-                if (player.hp <= 0) gameOver();
+            if (!enemy.markedForDeletion && 
+                player.x < enemy.x + enemy.w &&
+                player.x + player.w > enemy.x &&
+                player.y < enemy.y + enemy.h &&
+                player.y + player.h > enemy.y) {
+                
+                enemy.markedForDeletion = true;
+                player.hp -= 20;
+                createExplosion(player.x + player.w/2, player.y + player.h/2, '#ff0000');
+                
+                if (player.hp <= 0) {
+                    gameOver();
+                }
             }
         });
     }
 
     function animate() {
         if (!isPlaying) return;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Background
         if (ASSETS.background && ASSETS.background.complete && ASSETS.background.naturalHeight !== 0) {
-            bgX -= 2; if (bgX <= -canvas.width) bgX = 0;
-            ctx.drawImage(ASSETS.background, bgX, 0, canvas.width, canvas.height); ctx.drawImage(ASSETS.background, bgX + canvas.width, 0, canvas.width, canvas.height);
+            bgX -= 2;
+            if (bgX <= -canvas.width) bgX = 0;
+            ctx.drawImage(ASSETS.background, bgX, 0, canvas.width, canvas.height);
+            ctx.drawImage(ASSETS.background, bgX + canvas.width, 0, canvas.width, canvas.height);
         }
-        player.update(); player.draw();
-        bullets.forEach((bullet, index) => { bullet.update(); bullet.draw(); if (bullet.markedForDeletion) bullets.splice(index, 1); });
+
+        player.update();
+        player.draw();
+
+        bullets.forEach((bullet, index) => {
+            bullet.update();
+            bullet.draw();
+            if (bullet.markedForDeletion) bullets.splice(index, 1);
+        });
+
         if (frames % 60 === 0) enemies.push(new Enemy());
-        enemies.forEach((enemy, index) => { enemy.update(); enemy.draw(); if (enemy.markedForDeletion) enemies.splice(index, 1); });
-        particles.forEach((p, index) => { p.update(); p.draw(); if (p.life <= 0) particles.splice(index, 1); });
+        
+        enemies.forEach((enemy, index) => {
+            enemy.update();
+            enemy.draw();
+            if (enemy.markedForDeletion) enemies.splice(index, 1);
+        });
+
+        particles.forEach((p, index) => {
+            p.update();
+            p.draw();
+            if (p.life <= 0) particles.splice(index, 1);
+        });
+
         checkCollisions();
-        updateUI(); // Gọi hàm cập nhật UI mới
-        frames++; animationId = requestAnimationFrame(animate);
+        
+        // GỌI HÀM CẬP NHẬT UI Ở ĐÂY
+        updateUI();
+
+        frames++;
+        animationId = requestAnimationFrame(animate);
     }
 
     // --- UI CONTROLS ---
+
     function startGame() {
-        player = new Player(); bullets = []; enemies = []; particles = []; score = 0; frames = 0;
+        player = new Player();
+        bullets = [];
+        enemies = [];
+        particles = [];
+        score = 0;
+        frames = 0;
+        
+        // Hiện HUD, ẩn Menu
         document.getElementById('hud-layer').classList.remove('hidden');
         document.getElementById('menuScreen').classList.add('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
-        // Reset thanh máu đầy
-        document.getElementById('hp-bar-mask').style.width = '100%';
-        document.getElementById('hp-fill-img').style.filter = 'none';
-        isPlaying = true; animate();
+        
+        // Reset thanh máu về xanh
+        document.getElementById('health-bar-fill').style.width = '100%';
+        document.getElementById('health-bar-fill').style.background = 'linear-gradient(90deg, #00ff00, #00cc00)';
+
+        isPlaying = true;
+        animate();
     }
 
     function gameOver() {
-        isPlaying = false; cancelAnimationFrame(animationId);
+        isPlaying = false;
+        cancelAnimationFrame(animationId);
         document.getElementById('finalScore').innerText = score;
+        
+        // Ẩn HUD khi thua
         document.getElementById('hud-layer').classList.add('hidden');
         document.getElementById('gameOverScreen').classList.remove('hidden');
     }
@@ -292,9 +473,12 @@
         document.getElementById('menuScreen').classList.remove('hidden');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
-    function exitGame() { alert("Goodbye!"); document.body.innerHTML = "<div style='color:white; text-align:center; margin-top:20%'><h1>GAME ENDED</h1></div>"; }
+
+    function exitGame() {
+        alert("Goodbye!");
+        document.body.innerHTML = "<div style='color:white; text-align:center; margin-top:20%'><h1>GAME ENDED</h1></div>";
+    }
+
 </script>
-</body>
-</html></p>
 </body>
 </html>
