@@ -6,6 +6,257 @@
     <title>Chiến Cơ Lấp Ló</title>
 </head>
 <body>
-<p>File HTML đã được tạo từ code bạn gửi. Vui lòng dùng bản đầy đủ phía trên.</p>
+<p><!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiến Cơ lap lo - UI Mới</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            user-select: none; /* Chống bôi đen text khi chơi */
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 450px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            border: 2px solid #333;
+            background: #051895; /* Màu nền xanh đậm nếu chưa có ảnh */
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* --- UI Overlay Styles --- */
+        .ui-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            z-index: 20; /* Cao nhất để che game */
+        }
+
+        .hidden { display: none !important; }
+
+        h1 { font-size: 48px; margin-bottom: 20px; color: #0ff; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 10px #0ff; }
+        h2 { font-size: 36px; margin-bottom: 20px; color: #ff3333; }
+        
+        button {
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            background: transparent;
+            color: #fff;
+            border: 2px solid #fff;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+
+        /* --- HUD (Heads Up Display) - Giao diện trong game --- */
+        #hud-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Để chuột bấm xuyên qua vào canvas */
+            z-index: 10;
+        }
+
+        /* Điểm số góc trên trái */
+        #score-board {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            color: #fff;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        /* Thanh máu góc dưới trái */
+        .health-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hp-label {
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .health-bar-frame {
+            width: 200px;
+            height: 20px;
+            background-color: #333;
+            border: 2px solid #fff;
+            border-radius: 4px; /* Bo tròn nhẹ */
+            overflow: hidden;
+            position: relative;
+        }
+
+        #health-bar-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #00cc00);
+            transition: width 0.2s ease-out, background-color 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+    
+    <div id="hud-layer" class="hidden">
+        <div id="score-board">SCORE: <span id="scoreVal">0</span></div>
+        
+        <div class="health-container">
+            <span class="hp-label">HP</span>
+            <div class="health-bar-frame">
+                <div id="health-bar-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="menuScreen" class="ui-screen">
+        <h1>may bay cua Dang</h1>
+        <button onclick="startGame()">Start Game</button>
+        <button onclick="exitGame()">Exit</button>
+    </div>
+
+    <div id="gameOverScreen" class="ui-screen hidden">
+        <h2>MISSION FAILED</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <button onclick="startGame()">Play Again</button>
+        <button onclick="backToMenu()">Back Home</button>
+    </div>
+</div>
+
+<script>
+    // --- CẤU HÌNH & TÀI NGUYÊN ---
+
+    const playerImg = new Image();
+    playerImg.src = 'maybay.png'; // Đảm bảo file ảnh tên là maybay.png
+
+    const enemyImg = new Image();
+    enemyImg.src = 'enemy.png';   // Đảm bảo file ảnh tên là enemy.png
+
+    const bgImg = new Image();
+    // Lưu ý: Mình đã sửa nen.jpg.jpg thành nen.jpg cho đúng chuẩn
+    // Nếu file của bạn thực sự tên là nen.jpg.jpg thì hãy sửa lại dòng dưới
+    bgImg.src = 'nen.jpg'; 
+
+    const ASSETS = {
+        player: playerImg, 
+        enemy: enemyImg, 
+        background: bgImg,
+    };
+
+    // Hàm vẽ sprite hoặc khối màu thay thế
+    function drawSprite(ctx, img, x, y, w, h, color) {
+        if (img && img.complete && img.naturalHeight !== 0) {
+            ctx.drawImage(img, x, y, w, h);
+        } else {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, w, h);
+        }
+    }
+
+    // --- KHỞI TẠO ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let isPlaying = false;
+    let score = 0;
+    let frames = 0;
+    let animationId;
+    let bgX = 0;
+
+    const keys = { w: false, a: false, s: false, d: false };
+    
+    let player;
+    let bullets = [];
+    let enemies = [];
+    let particles = [];
+
+    // --- CLASS ĐỊNH NGHĨA ---
+    class Player {
+        constructor() {
+            this.w = 50;
+            this.h = 30;
+            this.x = 50;
+            this.y = canvas.height / 2 - this.h / 2;
+            this.speed = 5;
+            this.color = '#00ff00';
+            this.maxHp = 100;
+            this.hp = this.maxHp;
+        }
+
+        update() {
+            if (keys.w && this.y > 0) this.y -= this.speed;
+            if (keys.s && this.y < canvas.height - this.h) this.y += this.speed;
+            if (keys.a && this.x > 0) this.x -= this.speed;
+            if (keys.d && this.x < canvas.width - this.w) this.x += this.speed;
+        }
+
+        draw() {
+            // Chỉ vẽ máy bay, KHÔNG vẽ thanh máu ở đây nữa
+            drawSprite(ctx, ASSETS.player, this.x, this.y, this.w, this.h, this.color);
+        }
+    }
+
+    class Bullet {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.w = 10;
+            this.h = 4;
+            this.speed = 10;
+            this.color = '#ffff00';
+            this.markedForDeletion = false;
+        }
+        update() {
+            this.x += this.speed;
+            if (this.x > canvas.width) this.markedForDeletion = true;
+        }
+        draw() {
+            ctx.fillStyle = this.</p>
 </body>
 </html>
