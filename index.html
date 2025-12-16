@@ -37,29 +37,38 @@
             position: absolute; top: 15px; left: 20px; color: #fff; font-size: 24px; font-weight: bold; text-shadow: 1px 1px 2px #000;
         }
 
-        /* --- CSS CHO THANH MÁU HÌNH ẢNH MỚI --- */
-        
-        /* 1. Container tổng bao bọc cả khung và thanh máu */
-        .hp-image-container {
+       /* Thanh máu góc dưới trái */
+        .health-container {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            width: 250px; /* Chiều rộng tổng thể của khung */
-            height: 40px;  /* Chiều cao tổng thể của khung */
-            /* Tạm thời dùng màu nền xám để dễ nhìn vị trí nếu chưa có ảnh khung */
-           background-color: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        /* 2. Lớp khung (Frame) - Nằm trên cùng */
-        .hp-frame-layer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            /* Thay đường dẫn ảnh khung của bạn vào đây (ví dụ: url('hp_frame.png')) */
-           background-image: url('https://placehold.co/250x40/png?text=FRAME+IMAGE+(Transparent+Middle)&color=white'); 
-            background-size: contain;
-            background-repeat: no-repeat;
-            z-index: 2; /* Đảm bảo khung nằm đè lên trên thanh máu */
+        .hp-label {
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .health-bar-frame {
+            width: 200px;
+            height: 20px;
+            background-color: #333;
+            border: 2px solid #fff;
+            border-radius: 4px; /* Bo tròn nhẹ */
+            overflow: hidden;
+            position: relative;
+        }
+
+        #health-bar-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #00cc00);
+            transition: width 0.2s ease-out, background-color 0.3s;
         }
 
         /* 3. Lớp mặt nạ chứa (Mask Container) - Nằm bên dưới khung */
