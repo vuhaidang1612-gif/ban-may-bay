@@ -162,13 +162,13 @@
     // --- CẤU HÌNH & TÀI NGUYÊN ---
 
 const playerImg = new Image();
-playerImg.src = 'file:///C:/Users/VU%20NGOC/Downloads/New%20folder%20(4)/game%20may%20bay/game.html/maybay.png'; // Đường dẫn ảnh của bạn
+playerImg.src = 'maybay.png'; // Đường dẫn ảnh của bạn
 
 const enemyImg = new Image();
-enemyImg.src = 'file:///C:/Users/VU%20NGOC/Downloads/New%20folder%20(4)/game%20may%20bay/game.html/enemy.png';
+enemyImg.src = 'enemy.png';
 
 const bgImg = new Image();
-bgImg.src = 'file:///C:/Users/VU%20NGOC/Downloads/New%20folder%20(4)/game%20may%20bay/game.html/nen.jpg.jpg';
+bgImg.src = 'nen.jpg.jpg';
     const ASSETS = {
         player: playerImg, 
         enemy: enemyImg, 
